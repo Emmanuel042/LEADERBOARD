@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Leaderboard — UrbanWorkville Data Analytics Interns</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#eef0f8;--muted:#7a7f9a;--accent:#6c63ff;--accent2:#4ecdc4;--danger:#ff6b6b;--gold:#ffd166;--silver:#a8b2c1;--bronze:#c9956c;--radius:12px;--radius-sm:8px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1.5rem}
+  .header{margin-bottom:2rem;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+  .header-left h1{font-size:1.5rem;font-weight:600;letter-spacing:-0.02em}
+  .header-left p{font-size:0.82rem;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace}
+  .header-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{padding:9px 18px;border-radius:var(--radius-sm);border:1px solid var(--border2);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all .15s;background:transparent;color:var(--muted)}
+  .btn:hover{border-color:rgba(255,255,255,.25);color:var(--text);background:var(--surface2)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.primary:hover{background:#7c74ff}
+  .btn.green{background:rgba(78,205,196,.15);color:var(--accent2);border-color:rgba(78,205,196,.3)}
+  .btn.green:hover{background:rgba(78,205,196,.25)}
+  .btn.danger{background:rgba(255,107,107,.12);color:var(--danger);border-color:rgba(255,107,107,.3)}
+  .btn.sm{padding:6px 12px;font-size:0.8rem}
+  .btn-row{display:flex;gap:8px;margin-top:1.25rem}
+  .btn-row .btn{flex:1;text-align:center}
+ 
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem}
+  .stat-label{font-size:0.72rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+  .stat-val{font-size:1.6rem;font-weight:600;font-family:'DM Mono',monospace}
+ 
+  /* Weekly breakdown table */
+  .section-title{font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem;font-weight:500}
+  .week-section{margin-bottom:1.5rem}
+  .week-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto}
+  .week-table{width:100%;border-collapse:collapse;font-size:0.84rem}
+  .week-table th{padding:9px 14px;background:var(--surface2);color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;font-weight:500;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+  .week-table th.left{text-align:left}
+  .week-table td{padding:9px 14px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center}
+  .week-table td.left{text-align:left;font-weight:500;color:var(--text)}
+  .week-table tr:last-child td{border-bottom:none}
+  .week-table tr:hover td{background:var(--surface2)}
+ 
+  /* Attendance ticks */
+  .tick-row{display:flex;align-items:center;justify-content:center;gap:5px}
+  .tick{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);background:transparent}
+  .tick.done{background:rgba(78,205,196,.2);border-color:#4ecdc4;color:#4ecdc4}
+  .att-label{font-size:.75rem;color:var(--muted);margin-left:4px;font-family:'DM Mono',monospace}
+ 
+  /* Score pill */
+  .score-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:.8rem;font-weight:500}
+  .score-high{background:rgba(78,205,196,.15);color:#4ecdc4}
+  .score-mid{background:rgba(255,209,102,.15);color:#ffd166}
+  .score-low{background:rgba(255,107,107,.12);color:#ff9f9f}
+  .score-nil{background:rgba(255,255,255,.05);color:var(--muted)}
+ 
+  .total-pill{display:inline-flex;align-items:center;padding:3px 12px;border-radius:20px;font-family:'DM Mono',monospace;font-size:.82rem;font-weight:600;background:rgba(108,99,255,.15);color:#a78bfa}
+ 
+  /* Leaderboard */
+  .controls{display:flex;gap:6px;margin-bottom:1rem;align-items:center;flex-wrap:wrap}
+  .tab{padding:7px 16px;border-radius:20px;border:1px solid var(--border2);font-size:.82rem;font-weight:500;cursor:pointer;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .15s}
+  .tab:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .week-info-bar{margin-left:auto;font-size:.78rem;color:var(--muted);font-family:'DM Mono',monospace}
+ 
+  .board{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .board-header{display:grid;grid-template-columns:48px 1fr 120px 120px 100px 90px;gap:8px;padding:10px 20px;background:var(--surface2);font-size:.72rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+  .board-row{display:grid;grid-template-columns:48px 1fr 120px 120px 100px 90px;gap:8px;padding:12px 20px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+  .board-row:last-child{border-bottom:none}
+  .board-row:hover{background:var(--surface2)}
+  .rank{font-size:.82rem;font-weight:600;text-align:center;font-family:'DM Mono',monospace}
+  .rank.gold{color:var(--gold)}.rank.silver{color:var(--silver)}.rank.bronze{color:var(--bronze)}.rank.other{color:var(--muted)}
+  .avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;flex-shrink:0}
+  .name-cell{display:flex;align-items:center;gap:10px;min-width:0}
+  .name-text{font-size:.9rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-cell{display:flex;align-items:center;gap:7px}
+  .bar-bg{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;min-width:30px}
+  .bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+  .bar-label{font-size:.75rem;color:var(--muted);min-width:38px;text-align:right;font-family:'DM Mono',monospace}
+  .badge{font-size:.7rem;padding:3px 9px;border-radius:20px;font-weight:600;text-align:center;display:inline-block}
+  .empty{padding:3rem;text-align:center;color:var(--muted);font-size:.9rem}
+ 
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem;backdrop-filter:blur(4px)}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:400px;animation:pop .18s ease;max-height:90vh;overflow-y:auto}
+  @keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-title{font-size:1rem;font-weight:600;margin-bottom:1.2rem}
+  .field{margin-bottom:.9rem}
+  .field label{font-size:.78rem;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+  .field select,.field input{width:100%;padding:9px 12px;font-size:.88rem;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+  .field select:focus,.field input:focus{border-color:var(--accent)}
+  .field select option{background:#1a1d27}
+ 
+  /* Attendance checkbox group */
+  .att-check-group{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .att-check{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.88rem;color:var(--text)}
+  .att-check input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent2);cursor:pointer}
+ 
+  .score-input-row{display:flex;align-items:center;gap:8px}
+  .score-input-row input{width:90px;text-align:center;font-family:'DM Mono',monospace;font-size:1rem}
+  .score-input-row span{color:var(--muted);font-family:'DM Mono',monospace}
+  .divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+  .hint{font-size:.75rem;color:var(--muted);line-height:1.5;margin-top:.5rem}
+  .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:10px 20px;border-radius:20px;font-size:.85rem;z-index:200;animation:fadeup .3s ease;pointer-events:none}
+  @keyframes fadeup{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  @media(max-width:700px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .board-header,.board-row{grid-template-columns:36px 1fr 90px 80px}
+    .board-header>*:nth-child(4),.board-header>*:nth-child(5),
+    .board-row>*:nth-child(4),.board-row>*:nth-child(5){display:none}
+  }
+</style>
+</head>
+<body>
+ 
+<div class="header">
+  <div class="header-left">
+    <h1>UrbanWorkville Data Analytics Interns</h1>
+    <p id="subtitle">Loading...</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn green" onclick="requireAuth(openAddStudent)">+ Add student</button>
+    <button class="btn primary" onclick="requireAuth(function(){openUpdateModal(null);})">+ Update scores</button>
+    <button class="btn" onclick="requireAuth(addWeekPrompt)">+ New week</button>
+    <button class="btn" onclick="saveACopy()" style="background:rgba(255,209,102,.15);color:#ffd166;border-color:rgba(255,209,102,.3)">⬇ Save a copy</button>
+  </div>
+</div>
+ 
+<div class="stats" id="stats"></div>
+ 
+<!-- Weekly Breakdown Table -->
+<div class="week-section">
+  <div class="section-title">Weekly breakdown — attendance (out of 3) + task score (out of 10)</div>
+  <div class="week-table-wrap">
+    <table class="week-table">
+      <thead id="week-thead"></thead>
+      <tbody id="week-tbody"></tbody>
+    </table>
+  </div>
+</div>
+ 
+<!-- Leaderboard -->
+<div class="controls">
+  <button class="tab active" onclick="setView('overall',this)">Overall</button>
+  <button class="tab" onclick="setView('attendance',this)">Attendance</button>
+  <button class="tab" onclick="setView('tasks',this)">Tasks</button>
+  <span class="week-info-bar" id="week-info-bar"></span>
+</div>
+ 
+<div class="board">
+  <div class="board-header">
+    <div style="text-align:center">#</div>
+    <div>Student</div>
+    <div>Total attendance</div>
+    <div>Avg task score</div>
+    <div>Total points</div>
+    <div style="text-align:center">Badge</div>
+  </div>
+  <div id="board-rows"></div>
+</div>
+ 
+<div id="modal-area"></div>
+ 
+<script>
+const DATA_VERSION = 'v4_attendance3x';
+const ADMIN_PASSWORD = 'urban2026'; // Change this to your own password
+const STORAGE_KEY  = 'leaderboard_' + DATA_VERSION;
+const CLASSES_PER_WEEK = 3;
+const MAX_TASK = 10;
+ 
+const DEFAULT_STUDENTS = [
+  'Divine Chukwuneke','Ezinne Anadu','Laura Adiukwu',
+  'Sandra Chinemenma','Jidechukwu Chukwuemeka','Chidinma Anthonia',
+  'Mmesoma Ifeacho','Mmesoma Emmanuela','Nicole Lewechi'
+];
+ 
+const AVATARS=[
+  {bg:'#1e2d4a',fg:'#6aaee8'},{bg:'#1a3028',fg:'#4ecdc4'},
+  {bg:'#2e2416',fg:'#ffd166'},{bg:'#28204a',fg:'#a78bfa'},
+  {bg:'#1a2e28',fg:'#51cf66'},{bg:'#2e1e1e',fg:'#ff9f9f'},
+  {bg:'#2e1a2e',fg:'#e879f9'},{bg:'#1e2a1e',fg:'#86efac'},
+  {bg:'#2a2218',fg:'#fdba74'},{bg:'#1e1e2e',fg:'#94a3b8'},
+  {bg:'#1a2a2a',fg:'#67e8f9'},{bg:'#2e1e28',fg:'#f9a8d4'}
+];
+ 
+const initials=n=>n.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+let students, view='overall';
+ 
+// weeks = [{att:[false,false,false], task:null}, ...]
+function freshStudent(name, numWeeks=1){
+  return {
+    name,
+    weeks: Array.from({length:numWeeks}, ()=>({att:[false,false,false], task:null}))
+  };
+}
+ 
+function load(){
+  // Wipe old version keys
+  Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith('leaderboard_') && k!==STORAGE_KEY) localStorage.removeItem(k);
+  });
+ 
+  // Use embedded data if available (from a saved copy)
+  if(typeof EMBEDDED_DATA !== 'undefined' && EMBEDDED_DATA){
+    students = EMBEDDED_DATA;
+    // Re-ensure names always match master list
+    const lookup = {};
+    students.forEach(s=>{ lookup[s.name.toLowerCase()] = s; });
+    const tw = students.length ? students[0].weeks.length : 1;
+    DEFAULT_STUDENTS.forEach(name=>{
+      if(!lookup[name.toLowerCase()]){
+        students.push(freshStudent(name, tw));
+      }
+    });
+    save();
+    return;
+  }
+  const raw = localStorage.getItem(STORAGE_KEY);
+  let saved = [];
+  if(raw){ try{ saved=JSON.parse(raw); }catch(e){} }
+ 
+  const numWeeks = saved.length ? saved[0].weeks.length : 1;
+ 
+  const lookup = {};
+  saved.forEach(s=>{ lookup[s.name.toLowerCase()] = s.weeks; });
+ 
+  students = DEFAULT_STUDENTS.map(name=>{
+    const key = name.toLowerCase();
+    if(lookup[key]) return {name, weeks: lookup[key]};
+    return freshStudent(name, numWeeks);
+  });
+ 
+  // Keep manually added extra students
+  saved.forEach(s=>{
+    const inDefault = DEFAULT_STUDENTS.some(n=>n.toLowerCase()===s.name.toLowerCase());
+    if(!inDefault) students.push({name:s.name, weeks:s.weeks});
+  });
+ 
+  save();
+}
+ 
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(students)); }
+function totalWeeks(){ return students.length ? students[0].weeks.length : 0; }
+ 
+// Points: attendance classes attended (0-3) + task score (0-10) per week
+function weekPoints(w){ return (w.att.filter(Boolean).length) + (w.task !== null ? w.task : 0); }
+function totalPoints(s){ return s.weeks.reduce((sum,w)=>sum+weekPoints(w), 0); }
+function totalAttended(s){ return s.weeks.reduce((sum,w)=>sum+w.att.filter(Boolean).length, 0); }
+function totalPossibleAtt(){ return totalWeeks() * CLASSES_PER_WEEK; }
+function avgTask(s){
+  const sc = s.weeks.map(w=>w.task).filter(x=>x!==null);
+  return sc.length ? sc.reduce((a,b)=>a+b,0)/sc.length : null;
+}
+function maxPossiblePoints(){ return totalWeeks() * (CLASSES_PER_WEEK + MAX_TASK); }
+ 
+function scorePillClass(v){
+  if(v===null||v===undefined) return 'score-nil';
+  return v/MAX_TASK>=0.7?'score-high':v/MAX_TASK>=0.4?'score-mid':'score-low';
+}
+function badge(pts, maxPts){
+  if(!maxPts) return {label:'Starting',bg:'rgba(255,255,255,.06)',fg:'#7a7f9a'};
+  const pct = pts/maxPts;
+  if(pct>=0.8) return {label:'Top',    bg:'rgba(255,209,102,.15)',fg:'#ffd166'};
+  if(pct>=0.5) return {label:'Active', bg:'rgba(78,205,196,.15)', fg:'#4ecdc4'};
+  if(pct>=0.2) return {label:'Learning',bg:'rgba(108,99,255,.15)',fg:'#a78bfa'};
+  return               {label:'Starting',bg:'rgba(255,255,255,.06)',fg:'#7a7f9a'};
+}
+ 
+function sorted(){
+  const s = students.map((st,i)=>({...st,_i:i}));
+  if(view==='attendance') s.sort((a,b)=>totalAttended(b)-totalAttended(a));
+  else if(view==='tasks') s.sort((a,b)=>(avgTask(b)||0)-(avgTask(a)||0));
+  else s.sort((a,b)=>totalPoints(b)-totalPoints(a));
+  return s;
+}
+ 
+function render(){
+  const tw = totalWeeks();
+  const maxPts = maxPossiblePoints();
+  document.getElementById('subtitle').textContent =
+    `Week ${tw}  •  ${students.length} students  •  Instructor: Okoh Emmanuel`;
+  document.getElementById('week-info-bar').textContent =
+    `${tw} week${tw!==1?'s':''}  •  Max ${maxPts} pts`;
+ 
+  const list = sorted();
+  const topPts = list.length ? totalPoints(list[0]) : 1;
+ 
+  // Stats
+  const avgAtt = students.length
+    ? (students.reduce((a,s)=>a+totalAttended(s),0) / students.length / Math.max(totalPossibleAtt(),1) * 100).toFixed(0)
+    : 0;
+  const allAvgTask = students.map(s=>avgTask(s)).filter(x=>x!==null);
+  const classAvgTask = allAvgTask.length
+    ? (allAvgTask.reduce((a,b)=>a+b,0)/allAvgTask.length).toFixed(1) : '—';
+  const topPtsVal = list.length ? totalPoints(list[0]) : 0;
+ 
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="stat-label">Students</div><div class="stat-val">${students.length}</div></div>
+    <div class="stat"><div class="stat-label">Avg attendance</div><div class="stat-val">${avgAtt}%</div></div>
+    <div class="stat"><div class="stat-label">Class avg task</div><div class="stat-val">${classAvgTask==='—'?'—':classAvgTask+'/10'}</div></div>
+    <div class="stat"><div class="stat-label">Top points</div><div class="stat-val">${topPtsVal}<span style="font-size:.9rem;color:var(--muted)">/${maxPts}</span></div></div>`;
+ 
+  // Weekly breakdown table
+  const weekHeaders = Array.from({length:tw},(_,i)=>`Week ${i+1}`);
+  document.getElementById('week-thead').innerHTML=`<tr>
+    <th class="left" style="min-width:160px">Student</th>
+    ${weekHeaders.map(w=>`<th style="min-width:160px">${w}<br><span style="font-size:.65rem;color:var(--muted);font-weight:400">att (3) + task (10)</span></th>`).join('')}
+    <th style="min-width:100px">Total pts</th>
+  </tr>`;
+ 
+  const byName = [...students].sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('week-tbody').innerHTML = byName.map(s=>{
+    const tp = totalPoints(s);
+    return `<tr>
+      <td class="left">${s.name}</td>
+      ${s.weeks.map(w=>{
+        const attCount = w.att.filter(Boolean).length;
+        const ticks = w.att.map(a=>'<div class="tick '+(a?'done':'')+'">'+(a?'✓':'')+'</div>').join('');
+        const taskDisp = w.task===null?'—':w.task+'/10';
+        const wpts = weekPoints(w);
+        return `<td>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div class="tick-row">${ticks}<span class="att-label">${attCount}/3</span></div>
+            <span class="score-pill ${scorePillClass(w.task)}">${taskDisp}</span>
+            <span style="font-size:.7rem;color:var(--muted)">${wpts} pts</span>
+          </div>
+        </td>`;
+      }).join('')}
+      <td><span class="total-pill">${tp}/${maxPts}</span></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="99" style="padding:2rem;text-align:center;color:var(--muted)">No students yet</td></tr>`;
+ 
+  // Leaderboard
+  document.getElementById('board-rows').innerHTML = list.length ? list.map((s,i)=>{
+    const av = AVATARS[s._i % AVATARS.length];
+    const tp = totalPoints(s);
+    const ta = totalAttended(s);
+    const at = avgTask(s);
+    const rc = i===0?'gold':i===1?'silver':i===2?'bronze':'other';
+    const rl = i===0?'1st':i===1?'2nd':i===2?'3rd':`${i+1}`;
+    const bd = badge(tp, maxPts);
+    const barW = topPts>0 ? Math.round(tp/topPts*100) : 0;
+    return `<div class="board-row" onclick="requireAuth(function(){openUpdateModal(${s._i});})">
+      <div class="rank ${rc}">${rl}</div>
+      <div class="name-cell">
+        <div class="avatar" style="background:${av.bg};color:${av.fg}">${initials(s.name)}</div>
+        <div class="name-text">${s.name}</div>
+      </div>
+      <div class="bar-cell">
+        <div class="bar-bg"><div class="bar-fill" style="width:${totalPossibleAtt()?Math.round(ta/totalPossibleAtt()*100):0}%;background:#6aaee8"></div></div>
+        <span class="bar-label">${ta}/${totalPossibleAtt()}</span>
+      </div>
+      <div class="bar-cell">
+        <div class="bar-bg"><div class="bar-fill" style="width:${at===null?0:Math.round(at/MAX_TASK*100)}%;background:#4ecdc4"></div></div>
+        <span class="bar-label">${at===null?'—':at.toFixed(1)+'/10'}</span>
+      </div>
+      <div class="bar-cell">
+        <div class="bar-bg"><div class="bar-fill" style="width:${barW}%;background:#a78bfa"></div></div>
+        <span class="bar-label">${tp}pts</span>
+      </div>
+      <div style="text-align:center"><span class="badge" style="background:${bd.bg};color:${bd.fg}">${bd.label}</span></div>
+    </div>`;
+  }).join('') : `<div class="empty">No students yet</div>`;
+}
+ 
+function setView(v,el){
+  view=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); render();
+}
+function closeModal(){ document.getElementById('modal-area').innerHTML=''; }
+function toast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
+}
+ 
+function requireAuth(onSuccess){
+  document.getElementById('modal-area').innerHTML =
+    '<div class="overlay" onclick="if(event.target===this)closeModal()">' +
+    '<div class="modal" style="max-width:320px">' +
+    '<div class="modal-title" style="text-align:center">🔒 Admin Access</div>' +
+    '<p style="color:var(--muted);font-size:.85rem;text-align:center;margin-bottom:1rem">Enter the password to continue</p>' +
+    '<div class="field">' +
+    '<input type="password" id="auth-input" placeholder="Enter password" style="text-align:center;font-size:1rem;letter-spacing:.1em" onkeydown="if(event.key===String.fromCharCode(13))checkAuth()"/>' +
+    '</div>' +
+    '<p id="auth-error" style="color:#ff6b6b;font-size:.78rem;text-align:center;min-height:18px;margin-bottom:.5rem"></p>' +
+    '<div class="btn-row">' +
+    '<button class="btn" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn primary" onclick="checkAuth()">Unlock</button>' +
+    '</div>' +
+    '</div></div>';
+ 
+  // Store callback to call after successful auth
+  window._authCallback = onSuccess;
+  setTimeout(function(){ var el=document.getElementById('auth-input'); if(el) el.focus(); }, 80);
+}
+ 
+function checkAuth(){
+  var input = document.getElementById('auth-input');
+  if(!input) return;
+  if(input.value === ADMIN_PASSWORD){
+    closeModal();
+    if(window._authCallback) window._authCallback();
+    window._authCallback = null;
+  } else {
+    document.getElementById('auth-error').textContent = 'Incorrect password. Try again.';
+    input.value = '';
+    input.focus();
+  }
+}
+ 
+function openAddStudent(){
+  document.getElementById('modal-area').innerHTML=`
+    <div class="overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-title">Add new student</div>
+        <div class="field"><label>Full name</label><input id="new-name" placeholder="e.g. Amara Okonkwo"/></div>
+        <p class="hint">Student joins from the current week with no scores yet.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" onclick="saveNewStudent()">Add student</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{ const el=document.getElementById('new-name'); if(el) el.focus(); }, 80);
+}
+ 
+function saveNewStudent(){
+  const name=document.getElementById('new-name').value.trim();
+  if(!name) return;
+  students.push(freshStudent(name, Math.max(totalWeeks(),1)));
+  save(); closeModal(); render();
+  toast(`${name.split(' ')[0]} added!`);
+}
+ 
+function openUpdateModal(idx, weekIdx){
+  const tw = totalWeeks();
+  const selectedWeek = (weekIdx !== undefined && weekIdx !== null) ? weekIdx : tw - 1;
+  const s = idx !== null ? students[idx] : null;
+  const w = s ? s.weeks[selectedWeek] : {att:[false,false,false], task:null};
+ 
+  // Build week options
+  const weekOptions = Array.from({length:tw}, function(_,i){
+    return '<option value="'+i+'"'+(i===selectedWeek?' selected':'')+'>Week '+(i+1)+'</option>';
+  }).join('');
+ 
+  // Build student options
+  const studentOptions = students.map(function(st,i){
+    return '<option value="'+i+'"'+(i===idx?' selected':'')+'>'+st.name+'</option>';
+  }).join('');
+ 
+  document.getElementById('modal-area').innerHTML =
+    '<div class="overlay" onclick="if(event.target===this)closeModal()">' +
+    '<div class="modal">' +
+    '<div class="modal-title">' + (s ? 'Update: '+s.name.split(' ')[0] : 'Update scores') + '</div>' +
+ 
+    '<div class="field"><label>Week</label>' +
+    '<select id="m-week" onchange="switchWeek()">' + weekOptions + '</select>' +
+    '</div>' +
+ 
+    '<div class="field"><label>Student</label>' +
+    '<select id="m-student" onchange="switchWeek()">' + studentOptions + '</select>' +
+    '</div>' +
+ 
+    '<div class="field"><label>Classes attended (tick each class)</label>' +
+    '<div class="att-check-group">' +
+    '<label class="att-check"><input type="checkbox" id="att0"' + (w.att[0]?' checked':'') + '/> Class 1</label>' +
+    '<label class="att-check"><input type="checkbox" id="att1"' + (w.att[1]?' checked':'') + '/> Class 2</label>' +
+    '<label class="att-check"><input type="checkbox" id="att2"' + (w.att[2]?' checked':'') + '/> Class 3</label>' +
+    '</div></div>' +
+ 
+    '<div class="field"><label>Task score (out of 10)</label>' +
+    '<div class="score-input-row">' +
+    '<input type="number" id="m-task" min="0" max="10" step="0.5" placeholder="e.g. 7"' +
+    ' value="' + (w.task!==null&&w.task!==undefined ? w.task : '') + '"/>' +
+    '<span>/ 10</span>' +
+    '<button class="btn sm" onclick="clearTask()">Clear</button>' +
+    '</div>' +
+    '<p class="hint">Leave blank if task was not submitted.</p>' +
+    '</div>' +
+ 
+    '<div class="btn-row">' +
+    '<button class="btn" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn primary" onclick="saveUpdate()">Save</button>' +
+    '</div>' +
+    '<hr class="divider">' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+    '<button class="btn sm danger" style="width:100%" onclick="deleteWeekData()">🗑 Delete entire week data</button>' +
+    (idx!==null ? '<button class="btn sm danger" style="width:100%;margin-top:2px" onclick="removeStudent('+idx+')">Remove '+(s?s.name.split(' ')[0]:'student')+'</button>' : '') +
+    '</div>' +
+    '</div></div>';
+}
+ 
+function switchWeek(){
+  const sIdx = parseInt(document.getElementById('m-student').value);
+  const wIdx = parseInt(document.getElementById('m-week').value);
+  const s = students[sIdx];
+  const w = s.weeks[wIdx];
+  document.getElementById('att0').checked = w.att[0];
+  document.getElementById('att1').checked = w.att[1];
+  document.getElementById('att2').checked = w.att[2];
+  document.getElementById('m-task').value = (w.task!==null&&w.task!==undefined) ? w.task : '';
+}
+ 
+function clearTask(){ document.getElementById('m-task').value=''; }
+ 
+function deleteWeekData(){
+  const wIdx = parseInt(document.getElementById('m-week').value);
+  const tw = totalWeeks();
+ 
+  // Don't allow deleting the only week
+  if(tw === 1){
+    // Just clear week 1 data for all students
+    students.forEach(function(s){
+      s.weeks[0] = {att:[false,false,false], task:null};
+    });
+    save(); closeModal(); render();
+    toast('Week 1 data cleared!');
+    return;
+  }
+ 
+  // Remove that week index from all students
+  students.forEach(function(s){
+    s.weeks.splice(wIdx, 1);
+  });
+  save(); closeModal(); render();
+  toast('Week ' + (wIdx+1) + ' deleted!');
+}
+ 
+function saveUpdate(){
+  const sIdx = parseInt(document.getElementById('m-student').value);
+  const wIdx = parseInt(document.getElementById('m-week').value);
+  const att = [
+    document.getElementById('att0').checked,
+    document.getElementById('att1').checked,
+    document.getElementById('att2').checked
+  ];
+  const raw = document.getElementById('m-task').value.trim();
+  let task = null;
+  if(raw !== ''){const p = parseFloat(raw); if(!isNaN(p)) task = Math.min(MAX_TASK, Math.max(0, p));}
+  students[sIdx].weeks[wIdx] = {att:att, task:task};
+  save(); closeModal(); render();
+  toast('Week ' + (wIdx+1) + ' scores updated!');
+}
+ 
+function addWeekPrompt(){
+  const nextWeek = totalWeeks() + 1;
+  document.getElementById('modal-area').innerHTML =
+    '<div class="overlay" onclick="if(event.target===this)closeModal()">' +
+    '<div class="modal">' +
+    '<div class="modal-title">Start Week ' + nextWeek + '?</div>' +
+    '<p style="color:var(--muted);font-size:.88rem;line-height:1.6">All students will get a blank attendance and task entry for Week ' + nextWeek + '. You can update their scores afterwards.</p>' +
+    '<div class="btn-row">' +
+    '<button class="btn" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn primary" onclick="confirmAddWeek()">Yes, start Week ' + nextWeek + '</button>' +
+    '</div>' +
+    '</div>' +
+    '</div>';
+}
+ 
+function confirmAddWeek(){
+  students.forEach(function(s){ s.weeks.push({att:[false,false,false],task:null}); });
+  save(); closeModal(); render();
+  toast('Week ' + totalWeeks() + ' started!');
+}
+ 
+function removeStudent(idx){
+  const sname = students[idx].name;
+  const fname = sname.split(' ')[0];
+  document.getElementById('modal-area').innerHTML =
+    '<div class="overlay" onclick="if(event.target===this)closeModal()">' +
+    '<div class="modal">' +
+    '<div class="modal-title">Remove ' + sname + '?</div>' +
+    '<p style="color:var(--muted);font-size:.88rem;line-height:1.6">This will permanently delete all scores for ' + fname + '. This cannot be undone.</p>' +
+    '<div class="btn-row">' +
+    '<button class="btn" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmRemove(' + idx + ')">Remove ' + fname + '</button>' +
+    '</div>' +
+    '</div>' +
+    '</div>';
+}
+ 
+function confirmRemove(idx){
+  const name = students[idx].name.split(' ')[0];
+  students.splice(idx,1);
+  save(); closeModal(); render();
+  toast(name + ' removed');
+}
+ 
+function saveACopy(){
+  // Build the student data as a JS literal to embed directly in the file
+  const dataJson = JSON.stringify(students, null, 2);
+ 
+  // Get full HTML source
+  let src = document.documentElement.outerHTML;
+ 
+  // Remove any previously embedded data block
+  src = src.replace(/\/\/ ===SAVED_DATA_START===[\s\S]*?\/\/ ===SAVED_DATA_END===/g, '');
+ 
+  // Build the embedded data block
+  const block = '// ===SAVED_DATA_START===\n'
+    + 'const EMBEDDED_DATA = ' + dataJson + ';\n'
+    + '// ===SAVED_DATA_END===';
+ 
+  // Inject just before "const DATA_VERSION"
+  src = src.replace('const DATA_VERSION', block + '\nconst DATA_VERSION');
+ 
+  const blob = new Blob([src], {type: 'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  const stamp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.download = 'leaderboard_' + stamp + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  toast('File saved! Use this new file next time.');
+}
+ 
+load();
+render();
+</script>
+</body>
+</html>
